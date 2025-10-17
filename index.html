@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>머니 정글: 나의 금융 동물 찾기</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+        }
+        .fade-in {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .progress-bar-fill {
+            transition: width 0.5s ease-in-out;
+        }
+    </style>
+</head>
+<body class="bg-green-50 text-gray-800 flex items-center justify-center min-h-screen">
+
+    <div class="w-full max-w-md mx-auto bg-white rounded-2xl shadow-xl p-6 sm:p-8 space-y-6">
+        <!-- App container -->
+
+        <!-- 1. 시작 화면 -->
+        <div id="start-screen" class="text-center space-y-6 fade-in">
+            <div class="w-24 h-24 mx-auto bg-green-100 rounded-full flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-12 h-12 text-green-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 14V2H7v12h10zM5 14H3v6h18v-6h-2M12 18v-4"/></svg>
+            </div>
+            <h1 class="text-3xl font-bold text-gray-900">머니 정글</h1>
+            <p class="text-gray-600">나의 머니 DNA는 어떤 동물과 닮았을까요?<br>간단한 테스트로 당신의 금융 동물을 찾아보세요!</p>
+            <button onclick="startTest()" class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-4 rounded-lg transition-transform transform hover:scale-105">
+                테스트 시작하기
+            </button>
+        </div>
+
+        <!-- 2. 테스트 화면 -->
+        <div id="test-screen" class="hidden space-y-6 fade-in">
+            <!-- Progress Bar -->
+            <div class="space-y-2">
+                <div class="flex justify-between items-center">
+                    <span class="text-sm font-medium text-green-700">진행도</span>
+                    <span id="progress-text" class="text-sm font-medium text-gray-500">질문 1/5</span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-2.5">
+                    <div id="progress-bar" class="bg-green-500 h-2.5 rounded-full progress-bar-fill" style="width: 20%"></div>
+                </div>
+            </div>
+            
+            <!-- Question -->
+            <div class="text-center space-y-4">
+                <h2 id="question-text" class="text-xl font-bold h-20 flex items-center justify-center">질문이 여기에 표시됩니다.</h2>
+                <div id="answer-buttons" class="grid grid-cols-1 gap-3">
+                    <!-- 답변 버튼이 여기에 동적으로 추가됩니다 -->
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. 로딩 화면 -->
+        <div id="loading-screen" class="hidden text-center space-y-4 fade-in py-12">
+            <div class="animate-spin rounded-full h-16 w-16 border-b-4 border-green-500 mx-auto"></div>
+            <p class="text-gray-600 font-semibold">결과를 분석하는 중입니다...</p>
+        </div>
+
+        <!-- 4. 결과 화면 (유형 구분과 결과) -->
+        <div id="result-screen" class="hidden text-center space-y-6 fade-in">
+            <p class="text-sm font-bold text-green-600">당신의 금융 동물은 바로...</p>
+            <div id="animal-emoji" class="text-7xl"></div>
+            <h2 id="animal-name" class="text-3xl font-bold">동물 이름</h2>
+            <p id="animal-description" class="text-gray-600 bg-gray-100 p-4 rounded-lg">동물에 대한 설명입니다.</p>
+            
+            <button onclick="showActionScreen()" class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-4 rounded-lg transition-transform transform hover:scale-105">
+                맞춤 꿀팁 확인하기
+            </button>
+        </div>
+
+        <!-- 5. 액션 화면 (꿀팁과 카카오톡 참여하기) -->
+        <div id="action-screen" class="hidden space-y-6 fade-in">
+            <div class="text-center">
+                <div id="action-emoji" class="text-5xl"></div>
+                <h2 id="action-title" class="text-2xl font-bold mt-2"></h2>
+                <p class="text-gray-500">AI 꿀팁으로 동기부여 받고 커뮤니티에 참여하세요!</p>
+            </div>
+
+            <!-- Action Zone -->
+            <div class="border bg-gray-50 p-4 rounded-lg space-y-4">
+                <button id="ai-tip-button" onclick="getAITip()" class="w-full bg-white border border-green-500 text-green-600 font-bold py-3 px-4 rounded-lg hover:bg-green-50 transition-transform transform hover:scale-105">
+                    ✨ AI 맞춤형 꿀팁 받기
+                </button>
+                <!-- Gemini API Feature 1: AI Tip -->
+                <div id="ai-tip-container" class="hidden space-y-2">
+                    <div id="ai-tip-box" class="text-left text-gray-600 bg-green-50 border border-green-200 p-4 rounded-lg min-h-[80px] flex items-center justify-center">
+                        <div id="ai-tip-loading" class="flex items-center justify-center">
+                             <div class="animate-spin rounded-full h-5 w-5 border-b-2 border-green-500"></div>
+                             <span class="ml-2">AI가 꿀팁을 생성 중입니다...</span>
+                        </div>
+                        <p id="ai-tip-content" class="hidden"></p>
+                    </div>
+                </div>
+                <button onclick="openChatLink()" class="w-full bg-yellow-400 hover:bg-yellow-500 text-gray-800 font-bold py-3 px-4 rounded-lg transition-transform transform hover:scale-105 flex items-center justify-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.486 2 2 6.041 2 11.5c0 3.023 1.579 5.683 4.02 7.288l-1.673 4.544a.999.999 0 0 0 1.405 1.159l4.89-3.26c.925.244 1.899.369 2.888.369C17.514 21.5 22 17.459 22 12S17.514 2 12 2zm-3.004 12.5a1.5 1.5 0 1 1 .001-3.001 1.5 1.5 0 0 1-.001 3.001zm6.001 0a1.5 1.5 0 1 1 0-3.001 1.5 1.5 0 0 1 0 3.001z"/></svg>
+                    같은 유형과 오픈채팅방에서 함께하기
+                </button>
+            </div>
+            
+            <button onclick="showScreen('start-screen')" class="w-full bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-2 px-4 rounded-lg transition">
+                처음으로 돌아가기
+            </button>
+        </div>
+
+    </div>
+
+    <script>
+        // --- GEMINI API SETUP ---
+        const apiKey = "AIzaSyD4eBz3OFwVb8ve0a4GFEk_MlT6124vvAY"; // This will be automatically replaced by the execution environment.
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+
+        // --- DATA ---
+
+        // 테스트 질문
+        const questions = [
+            {
+                text: "갑자기 보너스 100만원이 생겼다! 당신의 선택은?",
+                answers: [
+                    { text: "미래를 위해 일단 저축 계좌에 넣어둔다.", type: "beaver" },
+                    { text: "평소 관심 있던 주식이나 펀드에 투자한다.", type: "eagle" },
+                    { text: "나를 위한 선물! 평소 갖고 싶던 것을 산다.", type: "bear" },
+                    { text: "절반은 저축, 절반은 갖고 싶던 것을 산다.", type: "chameleon" }
+                ]
+            },
+            {
+                text: "친구들과의 식사 자리, 계산할 때 나는?",
+                answers: [
+                    { text: "정확히 1/N 해서 깔끔하게 정산한다.", type: "beaver" },
+                    { text: "다음에 더 크게 얻어먹을 생각으로 시원하게 산다.", type: "eagle" },
+                    { text: "내가 만족한 식사였기에 기분 좋게 계산한다.", type: "bear" },
+                    { text: "그때그때 분위기와 주머니 사정에 따라 다르다.", type: "chameleon" }
+                ]
+            },
+            {
+                text: "새로운 재테크 정보(ex. 새로운 코인)를 들었을 때 나의 반응은?",
+                answers: [
+                    { text: "위험해 보여. 나는 안정적인 게 좋아.", type: "beaver" },
+                    { text: "흥미로운데? 소액으로 한번 시작해볼까?", type: "eagle" },
+                    { text: "내 가치관과 맞지 않으면 관심 없다.", type: "bear" },
+                    { text: "일단 지켜보다가 흐름을 보고 결정한다.", type: "chameleon" }
+                ]
+            },
+            {
+                text: "한 달 생활비를 계획할 때 나는?",
+                answers: [
+                    { text: "항목별로 예산을 짜고 철저하게 지킨다.", type: "beaver" },
+                    { text: "큰 흐름만 정하고, 좋은 기회가 생기면 유연하게 쓴다.", type: "eagle" },
+                    { text: "경험(여행, 배움)을 위한 예산은 아끼지 않는다.", type: "bear" },
+                    { text: "계획은 무슨! 버는 만큼, 상황에 맞게 쓴다.", type: "chameleon" }
+                ]
+            },
+            {
+                text: "물건을 살 때, 나의 구매 기준은?",
+                answers: [
+                    { text: "가성비! 가격과 성능을 꼼꼼히 비교한다.", type: "beaver" },
+                    { text: "미래 가치! 나중에 더 비싸질 수 있는 물건을 산다.", type: "eagle" },
+                    { text: "가심비! 조금 비싸도 나의 만족이 가장 중요하다.", type: "bear" },
+                    { text: "필요할 때 가장 좋아 보이는 것을 산다.", type: "chameleon" }
+                ]
+            }
+        ];
+
+        // 동물 유형 정보
+        const animalTypes = {
+            beaver: {
+                name: "꼼꼼한 비버형",
+                emoji: "🦫",
+                description: "미래를 위해 차곡차곡 댐을 쌓는 비버처럼, 안정적인 계획과 꾸준한 저축을 통해 자산을 모으는 것을 선호하는군요!",
+                chatLink: "https://open.kakao.com/o/gA01B2Cc", // Placeholder link
+            },
+            eagle: {
+                name: "과감한 독수리형",
+                emoji: "🦅",
+                description: "하늘에서 먹이를 포착하는 독수리처럼, 높은 곳에서 기회를 발견하고 과감한 투자를 통해 큰 수익을 노리는 모험가군요!",
+                chatLink: "https://open.kakao.com/o/gB02C3Dd", // Placeholder link
+            },
+            bear: {
+                name: "신중한 곰형",
+                emoji: "🐻",
+                description: "꼭 필요한 것만 소비하는 곰처럼, 자신의 가치관과 신념에 따라 돈을 사용하며 만족을 추구하는 현명한 소비자군요!",
+                chatLink: "https://open.kakao.com/o/gC03D4Ee", // Placeholder link
+            },
+            chameleon: {
+                name: "재빠른 카멜레온형",
+                emoji: "🦎",
+                description: "상황에 따라 색을 바꾸는 카멜레온처럼, 유연한 사고로 소비와 저축의 균형을 맞추며 변화에 빠르게 적응하는 재치꾼이군요!",
+                chatLink: "https://open.kakao.com/o/gD04E5Ff", // Placeholder link
+            }
+        };
+
+        // --- STATE MANAGEMENT ---
+
+        let currentQuestionIndex = 0;
+        let scores = { beaver: 0, eagle: 0, bear: 0, chameleon: 0 };
+        let userType = '';
+
+        // --- DOM ELEMENTS ---
+        const screens = document.querySelectorAll('.fade-in');
+        
+        // --- FUNCTIONS ---
+
+        // 화면 전환 함수
+        function showScreen(screenId) {
+            screens.forEach(screen => {
+                const el = document.getElementById(screen.id);
+                if (screen.id === screenId) {
+                    el.classList.remove('hidden');
+                } else {
+                    el.classList.add('hidden');
+                }
+            });
+        }
+
+        // 테스트 시작
+        function startTest() {
+            currentQuestionIndex = 0;
+            scores = { beaver: 0, eagle: 0, bear: 0, chameleon: 0 };
+            userType = '';
+            document.getElementById('ai-tip-container').classList.add('hidden');
+            document.getElementById('ai-tip-button').disabled = false;
+            document.getElementById('ai-tip-content').classList.add('hidden');
+
+            showScreen('test-screen');
+            displayQuestion();
+        }
+
+        // 질문 표시
+        function displayQuestion() {
+            const question = questions[currentQuestionIndex];
+            document.getElementById('question-text').textContent = question.text;
+            const answerButtons = document.getElementById('answer-buttons');
+            answerButtons.innerHTML = '';
+
+            question.answers.forEach(answer => {
+                const button = document.createElement('button');
+                button.textContent = answer.text;
+                button.className = "w-full bg-gray-100 hover:bg-green-100 text-gray-800 font-medium py-3 px-4 rounded-lg transition";
+                button.onclick = () => selectAnswer(answer.type);
+                answerButtons.appendChild(button);
+            });
+            
+            updateProgress();
+        }
+        
+        // 진행도 업데이트
+        function updateProgress() {
+            const progress = ((currentQuestionIndex + 1) / questions.length) * 100;
+            document.getElementById('progress-text').textContent = `질문 ${currentQuestionIndex + 1}/${questions.length}`;
+            document.getElementById('progress-bar').style.width = `${progress}%`;
+        }
+
+        // 답변 선택
+        function selectAnswer(type) {
+            scores[type]++;
+            currentQuestionIndex++;
+
+            if (currentQuestionIndex < questions.length) {
+                displayQuestion();
+            } else {
+                showLoadingAndResult();
+            }
+        }
+        
+        // 로딩 후 결과 표시
+        function showLoadingAndResult() {
+            showScreen('loading-screen');
+            setTimeout(() => {
+                calculateResult();
+                displayResult();
+                showScreen('result-screen');
+            }, 1500); // 1.5초 로딩
+        }
+
+        // 결과 계산
+        function calculateResult() {
+            userType = Object.keys(scores).reduce((a, b) => scores[a] > scores[b] ? a : b);
+        }
+
+        // 결과 표시
+        function displayResult() {
+            const result = animalTypes[userType];
+            document.getElementById('animal-emoji').textContent = result.emoji;
+            document.getElementById('animal-name').textContent = result.name;
+            document.getElementById('animal-description').textContent = result.description;
+        }
+
+        // 액션 화면 표시
+        function showActionScreen() {
+            const result = animalTypes[userType];
+            document.getElementById('action-emoji').textContent = result.emoji;
+            document.getElementById('action-title').textContent = `${result.name}님을 위한 맞춤 정보`;
+            showScreen('action-screen');
+        }
+
+        // 카카오톡 오픈채팅방 링크 열기
+        function openChatLink(https://open.kakao.com/o/s5A8nXOh) {
+            if (userType && animalTypes[userType] && animalTypes[userType].chatLink) {
+                const chatLink = animalTypes[userType].chatLink;
+                window.open(chatLink, '_blank');
+            } else {
+                console.error("Chat link not found for user type:", userType);
+                alert("채팅방 링크를 찾을 수 없습니다.");
+            }
+        }
+        
+        // --- GEMINI API FUNCTIONS ---
+
+        // Gemini API 호출 (Exponential backoff 포함)
+        async function callGeminiAPI(prompt, retries = 3, delay = 1000) {
+            const payload = {
+                contents: [{ parts: [{ text: prompt }] }],
+            };
+
+            for (let i = 0; i < retries; i++) {
+                try {
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+
+                    const result = await response.json();
+                    return result.candidates?.[0]?.content?.parts?.[0]?.text || "죄송합니다. 답변을 생성할 수 없습니다.";
+                } catch (error) {
+                    console.error(`Attempt ${i + 1} failed:`, error);
+                    if (i === retries - 1) throw error;
+                    await new Promise(res => setTimeout(res, delay * Math.pow(2, i)));
+                }
+            }
+        }
+
+        // AI 맞춤형 꿀팁 받기
+        async function getAITip() {
+            const button = document.getElementById('ai-tip-button');
+            const container = document.getElementById('ai-tip-container');
+            const loading = document.getElementById('ai-tip-loading');
+            const content = document.getElementById('ai-tip-content');
+            
+            button.disabled = true;
+            container.classList.remove('hidden');
+            loading.classList.remove('hidden');
+            content.classList.add('hidden');
+
+            const animalName = animalTypes[userType].name;
+            const description = animalTypes[userType].description;
+
+            const prompt = `당신은 친절하고 유능한 금융 어드바이저입니다. 사용자의 금융 동물 유형은 '${animalName}'입니다. 이 유형의 특징은 "${description}" 입니다. 이 사용자에게 격려가 되면서도 바로 실천할 수 있는 구체적인 금융 꿀팁을 딱 한 문장으로, 친근한 말투를 사용해서 한국어로 제안해주세요.`;
+
+            try {
+                const tip = await callGeminiAPI(prompt);
+                content.textContent = tip;
+            } catch (error) {
+                content.textContent = "AI 팁을 불러오는 데 실패했습니다. 잠시 후 다시 시도해주세요.";
+                console.error("Error fetching AI tip:", error);
+            } finally {
+                loading.classList.add('hidden');
+                content.classList.remove('hidden');
+            }
+        }
+
+    </script>
+
+</body>
+</html>
+
